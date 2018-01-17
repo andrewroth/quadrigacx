@@ -17,7 +17,19 @@ module QuadrigaCX
       response = hmac_request(*args)
       response = JSON.parse(response, object_class: OpenStruct) rescue (return fix_json(response))
 
-      check_error(response)
+      retries = 0
+      begin
+        check_error(response)
+      rescue Exception => e
+        if retries < 3
+          puts "#{e}: \n#{e.backtrace.join("\n\t")}"
+          puts "Retrying attempt #{retries}"
+          retries += 1
+          retry
+        else
+          raise
+        end
+      end
     end
 
     private
